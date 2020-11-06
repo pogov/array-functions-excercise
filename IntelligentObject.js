@@ -1,11 +1,10 @@
-function InteligentObject(targetObject) {
-  let onChangeFnParams;
+export function InteligentObject(targetObject) {
   const createProxyTargetObject = (sourceObject) => ({
     ...sourceObject,
-    onChangeFnParams,
-    onChange: (callbackFn) => {
-      if (!callbackFn) console.log("default log", onChangeFnParams);
-      if (callbackFn && onChangeFnParams) callbackFn(onChangeFnParams);
+    onChangeFnParams: null,
+    onChange: function (callbackFn) {
+      if (!callbackFn) console.log("default log", this.onChangeFnParams);
+      if (callbackFn) callbackFn(this.onChangeFnParams);
     },
   });
 
@@ -19,19 +18,19 @@ function InteligentObject(targetObject) {
         return true;
       }
 
-      if (hasKey) {
-        const prevValue = target[prop];
-        target[prop] = value;
-        const timestamp = new Date().getTime();
-        onChangeFnParams = { prop, prevValue, value, timestamp };
-        if (prevValue === value) return true;
-        proxyTarget.onChange();
-      }
+      const prevValue = target[prop];
+      if (prevValue === value) return true;
+      target[prop] = value;
+      const timestamp = new Date().getTime();
+      proxyTarget.onChangeFnParams = { prop, prevValue, value, timestamp };
+      proxyTarget.onChange();
+
       return true;
     },
     get: (target, prop) => {
       console.log(`Prop "${prop}" has been read`);
-      if (prop === "onChange") onChangeFnParams = { prop, target };
+      if (prop === "onChange")
+        proxyTarget.onChangeFnParams = { prop, ...target };
       return target[prop];
     },
   };
